@@ -8,7 +8,7 @@ from pydantic_settings import BaseSettings
 load_dotenv()
 
 
-BASE_DIR = Path(__file__).resolve().parent
+BASE_PATH = Path(__file__).resolve().parent.parent.parent
 
 
 class ModeEnum(str, Enum):
@@ -19,7 +19,7 @@ class ModeEnum(str, Enum):
 
 class Settings(BaseSettings):
     class Config:
-        env_file = BASE_DIR / '.env'
+        env_file = BASE_PATH / '.env'
         env_file_encoding = "utf-8"
 
 

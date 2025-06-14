@@ -11,12 +11,12 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from app.db.models.base_sql import BaseSQL
 from app.db.models import User, Service, Token, Profile, Role, EmailVerificationToken, ChangeEmailVerificationToken, ResetPasswordToken
+from app.core.config import db_settings
 
-load_dotenv()
 
 # Загружаем конфигурацию Alembic
 config = context.config
-config.set_main_option("sqlalchemy.url", PSTGR_URL)  # Устанавливаем URL базы данных
+config.set_main_option("sqlalchemy.url", db_settings.async_tapi_pstgr_url())  # Устанавливаем URL базы данных
 
 # Настройка логирования
 if config.config_file_name is not None:

@@ -32,6 +32,6 @@ COPY . .
 # Устанавливаем проект как пакет
 RUN pip install --no-cache-dir -e .
 
-EXPOSE 8666 5777
+EXPOSE 8666
 
 CMD ["gunicorn", "-c", "/app/alembic.ini", "/app/gunicorn.conf.py", "run:app"]

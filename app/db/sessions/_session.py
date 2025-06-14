@@ -31,7 +31,7 @@ class DatabaseSessionManager:
         Создаёт и предоставляет новую сессию базы данных.
         Гарантирует закрытие сессии по завершении работы.
         """
-        async with self.async_session_maker() as session:  # type: ignore
+        async with self.async_session_maker() as session:  
             try:
                 yield session
             except Exception as e:
@@ -106,7 +106,7 @@ class DatabaseSessionManager:
     @contextmanager
     def sync_create_session(self) -> Generator[Session, None, None]:
         """Создаёт и предоставляет новую **синхронную** сессию базы данных."""
-        session = self.sync_session_maker()  # type: ignore
+        session = self.sync_session_maker()  
         try:
             yield session
         except Exception as e:

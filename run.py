@@ -11,18 +11,12 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import RedirectResponse
 
+from app.core.config import BASE_PATH
 from version import get_app_version
 from app.core.templates import templates
 from app.fast_api.v1.endpoints import site as web_routes
 from app.fast_api.v1.endpoints import info as info_routers
-from app.fast_api.v1.endpoints.user import (
-    AuthAPI,
-    SecurityAPI,
-    ProfileAPI,
-    UserAPI,
-    AdminAPI,
-    BackgroundAPI,
-)
+
 from app.utils.logger import logger
 from app.core.error_handlers import setup_exception_handlers
 from app.core.middlewares import (
@@ -31,13 +25,11 @@ from app.core.middlewares import (
     StaticVersionMiddleware,
 )
 from app.db.dao.user import UsersDAO
-from app.utils.api_description import contact
 
 
 def load_md_description(filename: str) -> str:
     """Загружает содержимое .md файла из той же директории, где находится текущий модуль"""
-    current_dir = Path(__file__).parent
-    file_path = current_dir / filename
+    file_path = BASE_PATH / 'descriptions' / filename
     return file_path.read_text(encoding="utf-8")
 
 
@@ -56,12 +48,12 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:
 # Основное приложение (объединяем фронт и бэк)
 app_main = FastAPI(
     lifespan=lifespan,
-    title="🧩 Full Stack App BeaHea: Python 🐍 + JavaScript ⚡ + HTML 📄 + CSS 🎨",
-    description=load_md_description("description_main_api.md"),
+    title="Trainer API Application — part of the Oasis of Clean Code project",
+    description=load_md_description("TrainerAPI.md"),
     swagger_ui_parameters={"persistAuthorization": True},
     swagger_ui_init_oauth={
         "clientId": "swagger-client",
-        "appName": "Swagger UI BeaHea",
+        "appName": "Swagger UI TrainerAPI",
         "scopes": "USER",  # Используем явно заданные роли
         "usePkceWithAuthorizationCodeGrant": True,
     },
@@ -85,7 +77,7 @@ app = FastAPI(
     lifespan=lifespan,
     redirect_slashes=False,
     version=get_app_version(),
-    contact=contact,
+    contact=dict(name="", email="", telegram="@d_m_elec"),
 )
 
 # ====== Конфигурация ======

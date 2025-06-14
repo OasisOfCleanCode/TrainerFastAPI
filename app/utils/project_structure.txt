@@ -1,0 +1,141 @@
+Mode            Length Hierarchy
+----            ------ ---------
+d----        907.75 KB BeaHea-Full-Stack-Application
+-a---          96.00 B     ├── .dockerignore
+-a---          1.16 KB     ├── .env.example
+-a---          3.56 KB     ├── .gitignore
+-a---          1.16 KB     ├── alembic.ini
+-a---          1.24 KB     ├── CHANGELOG.md
+-a---        1009.00 B     ├── description_info_api.md
+-a---         667.00 B     ├── description_main_api.md
+-a---         978.00 B     ├── Dockerfile
+-a---         501.00 B     ├── gunicorn.conf.py
+-a---        803.59 KB     ├── logo_readme.webp
+-a---         83.68 KB     ├── package-lock.json
+-a---         264.00 B     ├── package.json
+-a---         168.00 B     ├── README.md
+-a---         523.00 B     ├── requirements.in
+-a---          6.38 KB     ├── run.py
+-a---         328.00 B     ├── setup.ps1
+-a---          1.62 KB     ├── setup.py
+-a---         351.00 B     ├── setup.sh
+-a---         610.00 B     ├── version.py
+-a---           8.00 B     ├── version.txt
+-a---           0.00 B     ├── __init__.py
+d----         154.00 B     app
+-a---         154.00 B         ├── __init__.py
+d----           0.00 B         api
+-a---           0.00 B             ├── __init__.py
+d----         17.58 KB             v1
+-a---         17.58 KB                 ├── base.py
+-a---           0.00 B                 ├── __init__.py
+d----         82.79 KB                 endpoints
+-a---          3.07 KB                     ├── info.py
+-a---          3.51 KB                     ├── site.py
+-a---         76.21 KB                     ├── user.py
+-a---           0.00 B                     ├── __init__.py
+d----         62.50 KB         core
+-a---          1.86 KB             ├── config.py
+-a---         974.00 B             ├── error_handlers.py
+-a---         10.07 KB             ├── exceptions.py
+-a---         18.30 KB             ├── middlewares.py
+-a---         25.17 KB             ├── responses.py
+-a---          12.00 B             ├── security.py
+-a---         213.00 B             ├── templates.py
+-a---          5.93 KB             ├── text_content.py
+-a---           0.00 B             ├── __init__.py
+d----           0.00 B         db
+-a---           0.00 B             ├── __init__.py
+d----         33.75 KB             dao
+-a---         12.67 KB                 ├── base_dao.py
+-a---         21.07 KB                 ├── user.py
+-a---           0.00 B                 ├── __init__.py
+d----         23.97 KB             models
+-a---         949.00 B                 ├── associations.py
+-a---          7.06 KB                 ├── base_sql.py
+-a---          1.26 KB                 ├── enums.py
+-a---         14.56 KB                 ├── user.py
+-a---         163.00 B                 ├── __init__.py
+d----         16.14 KB             schemas
+-a---         176.00 B                 ├── base_schemas.py
+-a---         15.97 KB                 ├── user.py
+-a---           0.00 B                 ├── __init__.py
+d----          9.96 KB             sessions
+-a---          1.30 KB                 ├── utils.py
+-a---          8.59 KB                 ├── _session.py
+-a---          72.00 B                 ├── __init__.py
+d----          3.64 KB         migrations
+-a---          2.80 KB             ├── env.py
+-a---          38.00 B             ├── README
+-a---         661.00 B             ├── script.py.mako
+-a---         161.00 B             ├── __init__.py
+d----         10.08 KB             versions
+-a---         10.08 KB                 ├── 2025-04-26_23-22-56_start.py
+d----         208.00 B         services
+-a---          10.00 B             ├── file_service.py
+-a---          16.00 B             ├── notification.py
+-a---         182.00 B             ├── taskiq_app.py
+-a---           0.00 B             ├── __init__.py
+d----           0.00 B         static
+d----          3.53 KB             css
+-a---          3.53 KB                 ├── main.css
+d----           0.00 B             images
+d----        803.59 KB                 general
+-a---        803.59 KB                     ├── logo.webp
+d----         17.16 KB             js
+-a---         882.00 B                 ├── alerts.js
+-a---          1.53 KB                 ├── api.js
+-a---          3.04 KB                 ├── auth.js
+-a---          4.34 KB                 ├── main.js
+-a---          7.39 KB                 ├── profile.js
+d----         34.18 KB         templates
+-a---          1.14 KB             ├── contacts.html
+-a---         712.00 B             ├── error.html
+-a---         16.47 KB             ├── index.html
+-a---          3.50 KB             ├── login.html
+-a---         869.00 B             ├── portal.html
+-a---          5.91 KB             ├── profile.html
+-a---          5.62 KB             ├── register.html
+d----          5.60 KB             layouts
+-a---          2.80 KB                 ├── base.html
+-a---          2.80 KB                 ├── base_links.html
+d----         13.25 KB             partials
+-a---          2.13 KB                 ├── footer.html
+-a---          5.55 KB                 ├── header.html
+-a---          5.56 KB                 ├── header_links.html
+d----         20.27 KB         utils
+-a---          2.25 KB             ├── api_description.py
+-a---          3.75 KB             ├── dev_secret_gen.py
+-a---          2.03 KB             ├── gen_project_structure.py
+-a---          2.64 KB             ├── logger.py
+-a---          1.92 KB             ├── num_code.py
+-a---          7.68 KB             ├── project_structure.txt
+-a---           0.00 B             ├── __init__.py
+d----         10.21 KB     deploy
+-a---          3.86 KB         ├── compose.beahea.full.yml
+-a---          2.86 KB         ├── compose.beahea.infrastructure.yml
+-a---         778.00 B         ├── compose.beahea.web_app.yml
+-a---          1.63 KB         ├── generate_changelog_git_changelog.py
+-a---         809.00 B         ├── notify_telegram.py
+-a---         319.00 B         ├── update_version.py
+-a---           0.00 B         ├── __init__.py
+d----          7.74 KB         nginx_confings
+-a---          2.34 KB             ├── beahea.ru.conf
+-a---          1.51 KB             ├── minio.beahea.ru.conf
+-a---          1.40 KB             ├── port.beahea.ru.conf
+-a---          1.01 KB             ├── rabbit.beahea.ru.conf
+-a---          1.48 KB             ├── tg.bot.beahea.ru.conf
+d----          2.67 KB     scripts
+-a---         620.00 B         ├── build-release.sh
+-a---          1.36 KB         ├── deploy-on-server.sh
+-a---         715.00 B         ├── pack-release.sh
+d----         396.00 B     tests
+-a---         396.00 B         ├── conftest.py
+-a---           0.00 B         ├── __init__.py
+d----          1.01 KB         api
+-a---         388.00 B             ├── test_login.py
+-a---         411.00 B             ├── test_register_missing_fields.py
+-a---         240.00 B             ├── test_root.py
+-a---           0.00 B             ├── __init__.py
+d----           0.00 B         services
+-a---           0.00 B             ├── __init__.py
