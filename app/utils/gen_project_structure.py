@@ -1,4 +1,4 @@
-# app/utils/gen_tree.py
+# app/utils/gen_project_structure.py
 
 import os
 

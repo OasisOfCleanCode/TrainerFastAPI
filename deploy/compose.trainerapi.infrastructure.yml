@@ -52,7 +52,7 @@ services:
     image: redis:latest
     container_name: redis
     restart: always
-    command: redis-server
+    command: redis-server --requirepass ${TAPI_REDIS_PASS}
     ports:
       - ":6379"
     volumes:
@@ -61,7 +61,7 @@ services:
       tapi_dev_network:
         ipv4_address: 172.18.0.201
     healthcheck:
-      test: [ "CMD", "redis-cli", "ping" ]
+      test: ["CMD", "redis-cli", "-a", "${TAPI_REDIS_PASS}", "ping"]
       interval: 5s
       timeout: 3s
       retries: 3

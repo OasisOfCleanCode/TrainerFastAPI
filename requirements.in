@@ -47,3 +47,6 @@ python-multipart
 # Testing
 pytest
 pytest-asyncio
+
+
+celery

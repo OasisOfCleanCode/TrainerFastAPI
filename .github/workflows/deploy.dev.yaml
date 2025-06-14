@@ -209,7 +209,7 @@ jobs:
               echo "BASE_TFA_MEDIA_URL=https://media.tfa.occ.dev" >> .env
               echo "BASE_TG_MEDIA_URL=https://tg.tfa.occ.dev" >> .env
               echo "APP_MODE=devveloper" >> .env
-              echo "TFA_TOKEN_ACCESS_SECRET_KEY=${{ secrets.TFA_TOKEN_ACCESS_SECRET_KEY }}" >> .env
+              echo "TAPI_TOKEN_ACCESS_SECRET_KEY=${{ secrets.TAPI_TOKEN_ACCESS_SECRET_KEY }}" >> .env
               echo "TELEGRAM_TOKEN_FOR_SEND_TELEBOT=${{ secrets.TELEGRAM_TOKEN_FOR_SEND_TELEBOT }}" >> .env
               echo "CHAT_ID_FOR_SEND=${{ secrets.CHAT_ID_FOR_SEND }}" >> .env          
               echo "CATALOG_PSTGR_NAME=${{ secrets.CATALOG_PSTGR_NAME }}" >> .env

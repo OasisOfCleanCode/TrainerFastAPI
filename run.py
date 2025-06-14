@@ -77,7 +77,7 @@ app = FastAPI(
     lifespan=lifespan,
     redirect_slashes=False,
     version=get_app_version(),
-    contact=dict(name="", email="", telegram="@d_m_elec"),
+    contact=dict(name="", email="", telegram="@OasisOfClearCodeBot"),
 )
 
 # ====== Конфигурация ======

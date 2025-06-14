@@ -410,7 +410,6 @@ class StaticVersionMiddleware(BaseHTTPMiddleware):
     def __init__(self, app, templates: Jinja2Templates):
         super().__init__(app)
         self.templates = templates
-        # 💡 Используем фиксированное значение, чтобы оно не менялось при каждом запросе
         self.version = datetime.now().strftime("%Y%m%d%H%M")
 
     async def dispatch(self, request: Request, call_next):
