@@ -1,20 +1,19 @@
-# deploy/compose.beahea.web_app.yml
+# deploy/compose.trainerapi.web_app.yml
 
 services:
-  # Main Web App
-  web_main_app:
+  tapi_app:
     build:
       context: ..
       dockerfile: Dockerfile
-    image: web_main_app:${VERSION_TAG:-latest}
-    container_name: web_main_app
+    image: tapi_app:${VERSION_TAG:-latest}
+    container_name: tapi_app
     env_file: ../.env
     ports:
-      - "8666:8666"
+      - "51000:51000"
     volumes:
       - /beahea_prod/app/logs:/app/logs
     networks:
-      tfa_dev_network:
+      tapi_dev_network:
         ipv4_address: 172.18.0.33
     restart: unless-stopped
     command: >
@@ -28,5 +27,5 @@ services:
 
 
 networks:
-  tfa_dev_network:
+  tapi_dev_network:
     external: True

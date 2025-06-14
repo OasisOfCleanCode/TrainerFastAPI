@@ -1,0 +1,105 @@
+
+services:
+  tapi_pstgr:
+    image: postgres:16.3-alpine
+    container_name: tapi_pstgr
+    environment:
+      POSTGRES_DB: ${TAPI_PSTGR_NAME}
+      POSTGRES_USER: ${TAPI_PSTGR_USER}
+      POSTGRES_PASSWORD: ${TAPI_PSTGR_PASS}
+    ports:
+      - "${TAPI_PSTGR_PORT}:5432"
+    volumes:
+      - tapi_pstgr_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${TAPI_PSTGR_USER} -d ${TAPI_PSTGR_NAME} || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      tapi_dev_network:
+        ipv4_address: 172.18.0.103
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  rabbitmq:
+    image: rabbitmq:3.12-management
+    container_name: rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: ${TAPI_RABBITMQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${TAPI_RABBITMQ_PASS}
+    ports:
+      - "${TAPI_RABBITMQ_PORT}:5672"
+      - "${TAPI_RABBITMQ_UI_PORT}:15672"
+    volumes:
+      - tapi_rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: [ "CMD", "rabbitmqctl", "status" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      tapi_dev_network:
+        ipv4_address: 172.18.0.203
+    restart: unless-stopped
+
+  redis:
+    image: redis:latest
+    container_name: redis
+    restart: always
+    command: redis-server
+    ports:
+      - ":6379"
+    volumes:
+      - tapi_redis_data:/data
+    networks:
+      tapi_dev_network:
+        ipv4_address: 172.18.0.201
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+
+  tapi_app:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    image: tapi_app:${VERSION_TAG:-latest}
+    container_name: tapi_app
+    env_file: ../.env
+    ports:
+      - "8666:8666"
+    volumes:
+    - /beahea_prod/app/logs:/app/logs
+    networks:
+      tapi_dev_network:
+        ipv4_address: 172.18.0.33
+    restart: unless-stopped
+    command: >
+      sh -c "alembic -c /app/migrations/alembic.ini upgrade head && 
+      gunicorn run:app -c gunicorn_conf.py"
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8666/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  tapi_pstgr_data:
+  tapi_redis_data:
+  tapi_rabbitmq_data:
+
+networks:
+  tapi_dev_network:
+    external: true

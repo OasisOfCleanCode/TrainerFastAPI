@@ -270,22 +270,22 @@ jobs:
       - name: 🌐 Создать Docker Network, если не существует на удаленном
         run: |
           ssh -i ~/.ssh/tfa_dev_key -p ${{ secrets.DEV_SERVER_PORT }} ${{ secrets.DEV_SERVER_USER }}@${{ secrets.DEV_SERVER_IP }} << 'EOF'
-            docker network inspect tfa_dev_network >/dev/null 2>&1 || \
+            docker network inspect tapi_dev_network >/dev/null 2>&1 || \
             docker network create \
               --driver bridge \
               --subnet=172.18.0.0/16 \
               --gateway=172.18.0.1 \
               --attachable \
-              tfa_dev_network
+              tapi_dev_network
           EOF
 
       - name: 🧠 Убедиться, что сеть существует
         run: |
-          docker network inspect tfa_dev_network >/dev/null 2>&1 || \
+          docker network inspect tapi_dev_network >/dev/null 2>&1 || \
           docker network create \
             --subnet=172.0.0.0/16 \
             --gateway=172.0.0.1 \
-            tfa_dev_network
+            tapi_dev_network
 
 
       # Установка типа развертывания
