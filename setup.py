@@ -12,16 +12,28 @@ install_requires = parse_requirements("requirements.in")
 setup(
     name="web_app",
     version=get_app_version(),
-    description="Trainer API Application. Oasis of Clear Code",
+    description="Trainer API Application — part of the Oasis of Clean Code project",
     long_description=open("README.md", encoding="utf-8").read(),
     long_description_content_type="text/markdown",
     author="dmitrij-el",
     author_email="",
-    url="",
+    url="https://github.com/OasisOfCleanCode/trainer-api",  # Укажи актуальный URL
     packages=find_packages(),
     include_package_data=True,
     install_requires=install_requires,
     license="MIT",
-    classifiers=[],
+    classifiers=[
+        "Development Status :: 3 - Alpha",
+        "Intended Audience :: Developers",
+        "Topic :: Software Development :: Libraries :: Application Frameworks",
+        "License :: OSI Approved :: MIT License",
+        "Programming Language :: Python :: 3.12",
+        "Framework :: FastAPI",
+        "Operating System :: OS Independent"
+    ],
     python_requires=">=3.12",
+    project_urls={
+        "Source": "https://github.com/OasisOfCleanCode/TrainerAPI",
+        "Privacy Policy": "https://raw.githubusercontent.com/OasisOfCleanCode/TrainerAPI/dev/templates/privacy_policy_oasis.html",
+    }
 )
