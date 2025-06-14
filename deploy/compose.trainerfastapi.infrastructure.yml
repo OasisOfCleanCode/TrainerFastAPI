@@ -1,0 +1,82 @@
+# deploy/compose.beahea.infrastructure.yml
+
+services:
+  beahea_pstgr:
+    image: postgres:16.3-alpine
+    container_name: tfa_pstgr
+    environment:
+      POSTGRES_DB: ${TFA_PSTGR_NAME}
+      POSTGRES_USER: ${TFA_PSTGR_USER}
+      POSTGRES_PASSWORD: ${TFA_PSTGR_PASS}
+    ports:
+      - "${TFA_PSTGR_PORT}:5432"
+    volumes:
+      - tfa_pstgr_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${TFA_PSTGR_USER} -d ${TFA_PSTGR_NAME} || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      tfa_dev_network:
+        ipv4_address: 172.18.0.103
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  rabbitmq:
+    image: rabbitmq:3.12-management
+    container_name: rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: ${TFA_RABBITMQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${TFA_RABBITMQ_PASS}
+    ports:
+      - "${TFA_RABBITMQ_PORT}:5672"
+      - "${TFA_RABBITMQ_UI_PORT}:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: [ "CMD", "rabbitmqctl", "status" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      tfa_dev_network:
+        ipv4_address: 172.18.0.203
+    restart: unless-stopped
+
+  redis:
+    image: redis:latest
+    container_name: redis
+    restart: always
+    command: redis-server
+    ports:
+      - ":6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      tfa_dev_network:
+        ipv4_address: 172.18.0.201
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+
+volumes:
+  beahea_pstgr_data:
+  redis_data:
+  rabbitmq_data:
+
+networks:
+  tfa_dev_network:
+    external: true

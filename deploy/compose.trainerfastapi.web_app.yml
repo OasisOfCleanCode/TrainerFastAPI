@@ -1,0 +1,32 @@
+# deploy/compose.beahea.web_app.yml
+
+services:
+  # Main Web App
+  web_main_app:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    image: web_main_app:${VERSION_TAG:-latest}
+    container_name: web_main_app
+    env_file: ../.env
+    ports:
+      - "8666:8666"
+    volumes:
+      - /beahea_prod/app/logs:/app/logs
+    networks:
+      tfa_dev_network:
+        ipv4_address: 172.18.0.33
+    restart: unless-stopped
+    command: >
+      sh -c "alembic -c /app/alembic.ini upgrade head && 
+      gunicorn run:app -c /app/gunicorn.conf.py"
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8666/api/info/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+
+networks:
+  tfa_dev_network:
+    external: True

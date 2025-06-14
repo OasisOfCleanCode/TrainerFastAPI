@@ -1,0 +1,157 @@
+
+services:
+  beahea_pstgr:
+    image: postgres:16.3-alpine
+    container_name: beahea_pstgr
+    environment:
+      POSTGRES_DB: ${PSTGR_NAME}
+      POSTGRES_USER: ${PSTGR_USER}
+      POSTGRES_PASSWORD: ${PSTGR_PASS}
+      PGPORT: ${PSTGR_PORT}
+    ports:
+      - "${PSTGR_PORT}:${PSTGR_PORT}"
+    volumes:
+      - beahea_pstgr_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${PSTGR_USER} -d ${PSTGR_NAME} || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      tfa_dev_network:
+        ipv4_address: 172.18.0.103
+    restart: always
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  rabbitmq:
+    image: rabbitmq:3.12-management
+    container_name: rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS}
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: [ "CMD", "rabbitmqctl", "status" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      tfa_dev_network:
+        ipv4_address: 172.18.0.203
+    restart: always
+
+  minio:
+    restart: always
+    image: bitnami/minio:2024.7.26
+    container_name: minio
+    ports:
+      - '9800:9800'
+      - '9801:9801'
+    environment:
+      MINIO_ROOT_USER: ${MINIO_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_PASS}
+      MINIO_SERVER_URL: ${MINIO_SERVER_URL}
+      MINIO_BROWSER_REDIRECT_URL: ${MINIO_BROWSER_REDIRECT_URL}
+      MINIO_API_PORT_NUMBER: 9800
+      MINIO_CONSOLE_PORT_NUMBER: 9801
+    volumes:
+      - minio_data:/data
+      - ../create_buckets.sh:/usr/bin/create_buckets.sh
+      - /tfa_projects/minio_certs:/root/.minio/certs:ro
+    healthcheck:
+      test: [ "CMD", "curl", "-k", "https://localhost:9800/minio/health/live" ]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    networks:
+      tfa_dev_network:
+        ipv4_address: 172.18.0.205
+
+  redis:
+    image: redis:latest
+    container_name: redis
+    restart: always
+    command: redis-server
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      tfa_dev_network:
+        ipv4_address: 172.18.0.201
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+
+  web_main_app:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    image: web_main_app:${VERSION_TAG:-latest}
+    container_name: web_main_app
+    env_file: ../.env
+    ports:
+      - "8666:8666"
+    volumes:
+    - /beahea_prod/app/logs:/app/logs
+    networks:
+      tfa_dev_network:
+        ipv4_address: 172.18.0.33
+    restart: unless-stopped
+    command: >
+      sh -c "alembic -c /app/migrations/alembic.ini upgrade head && 
+      gunicorn run:app -c gunicorn_conf.py"
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8666/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+
+  web_main_app_taskiq_worker:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    container_name: web_main_app_taskiq_worker
+    ports:
+      - "5777:5777"
+    command: ["python", "-m", "taskiq", "worker", "app.services.taskiq_app", "--fs-discover"]
+    volumes:
+      - .:/app
+    networks:
+      tfa_dev_network:
+        ipv4_address: 172.18.0.232
+    depends_on:
+      - web_main_app
+
+volumes:
+  beahea_pstgr_data:
+  redis_data:
+  rabbitmq_data:
+  minio_data:
+  minio_ssl:
+
+networks:
+  tfa_dev_network:
+    name: tfa_dev_network
+    ipam:
+      driver: default
+      config:
+        - subnet: "172.18.0.0/16"
+          gateway: "172.18.0.1"

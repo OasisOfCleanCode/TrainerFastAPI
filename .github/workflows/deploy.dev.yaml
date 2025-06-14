@@ -1,0 +1,345 @@
+name: CI/CD Pipeline Developer version Trainer FastAPI Application for Oasis of Clear Code
+
+on:
+  workflow_dispatch:
+    inputs:
+      deploy_type:
+        description: 'Choose the type of deployment Dev version Trainer FastAPI Application for Oasis of Clear Code'
+        required: true
+        default: 'application'
+        type: choice
+        options:
+          - application
+          - infrastructure
+          - full
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Авторизация в Docker Hub
+      - name: 🔐 Авторизация в Docker Hub
+        run: |
+          echo "::add-mask::${{ secrets.DOCKER_PASSWORD }}"
+          echo ${{ secrets.DOCKER_PASSWORD }} | docker login --username ${{ secrets.DOCKER_USERNAME }} --password-stdin
+
+   # Настройка SSH-ключа с использованием SSH-ключа из секретов
+      - name: 🔑 Настройка SSH-ключа
+        uses: shimataro/ssh-key-action@v2
+        with:
+          key: ${{ secrets.DEV_SSH_PRIVATE_KEY }}
+          name: tfa_dev_key
+          known_hosts: 'github.com'
+
+
+      # Убедитесь, что директория .ssh существует
+      - name: 📁 Проверка директории .ssh
+        run: mkdir -p ${{ secrets.DEV_SERVER_PORT }} ~/.ssh
+
+      # Установка правильных прав для SSH-ключа
+      - name: 🔒 Права доступа к SSH-ключу
+        run: chmod 600 ~/.ssh/tfa_dev_key
+
+      # Добавление GitHub в known_hosts
+      - name: 🌐 Добавление GitHub в known_hosts
+        run: ssh-keyscan -H github.com >> ~/.ssh/known_hosts
+
+      # Добавление удаленного сервера в known_hosts
+      - name: 🖥️ Добавление сервера в known_hosts
+        run: |
+          if ! ssh-keyscan -p ${{ secrets.DEV_SERVER_PORT }} -H ${{ secrets.DEV_SERVER_IP }} >> ~/.ssh/known_hosts; then
+            echo "Server not found, skipping."
+          fi
+
+      - name: 🔍 Просмотр содержимого known_hosts
+        run: cat ~/.ssh/known_hosts
+
+      - name: 🔐 Права для директории .ssh
+        run: chmod 700 ~/.ssh
+
+      - name: 🧾 Проверка наличия known_hosts
+        run: ls -la ~/.ssh/
+
+
+      # Тестирование SSH-соединения с сервером
+      - name: 🔌 Проверка подключения по SSH
+        run: ssh -v -i ~/.ssh/tfa_dev_key -p ${{ secrets.DEV_SERVER_PORT }} ${{ secrets.DEV_SERVER_USER }}@${{ secrets.DEV_SERVER_IP }} "echo 'SSH connection successful!'"
+
+
+      - name: 📦 Свободное место в Docker (до)
+        run: docker system df
+
+      # Клонирование репозитория
+      - name: 📥 Клонирование репозитория
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_PAT }}
+
+      # Уведомление в Telegram о старте
+      - name: 🚀 Уведомление о старте деплоя в Telegram
+        run: |
+          TYPE="${{ github.event.inputs.deploy_type }}"
+          if [[ "$TYPE" == "application" ]]; then
+            TARGET="🖥️ Приложение Trainer FastAPI Application for Oasis of Clear Code"
+          elif [[ "$TYPE" == "infrastructure" ]]; then
+            TARGET="🧩 Инфраструктура Trainer FastAPI Application for Oasis of Clear Code"
+          elif [[ "$TYPE" == "mail" ]]; then
+            TARGET="📧 Почтовый сервис Trainer FastAPI Application for Oasis of Clear Code"
+          else
+            TARGET="🌐 Полный стек Trainer FastAPI Application for Oasis of Clear Code"
+          fi
+          
+          COMMIT_AUTHOR=$(git log -1 --pretty=%an)
+          COMMIT_MESSAGE=$(git log -1 --pretty=%B)
+          MESSAGE="🚀 *Начался деплой ${TARGET}*%0A👤 Автор: $COMMIT_AUTHOR%0A📝 Коммит: $COMMIT_MESSAGE"
+          curl -s -X POST https://api.telegram.org/bot${{ secrets.TELEGRAM_TOKEN_FOR_SEND_TELEBOT }}/sendMessage \
+          -d chat_id=${{ secrets.CHAT_ID_FOR_SEND }} -d text="$MESSAGE" -d parse_mode="Markdown"
+
+      # Установка зависимостей Node.js для работы с standard-version
+      - name: 🟩 Установка Node.js
+        if: ${{ github.event.inputs.deploy_type == 'application' || github.event.inputs.deploy_type == 'full' }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: 📦 Установка standard-version
+        if: ${{ github.event.inputs.deploy_type == 'application' || github.event.inputs.deploy_type == 'full' }}
+        run: npm install
+
+      # Увеличение версии и обновление CHANGELOG.md
+      - name: 🔖 Обновление версии и CHANGELOG
+        if: ${{ github.event.inputs.deploy_type == 'application' || github.event.inputs.deploy_type == 'full' }}
+        id: version
+        run: |
+          npx standard-version
+          VERSION=$(node -p "require('./package.json').version")
+          echo $VERSION > version.txt
+          echo "VERSION_TAG=$VERSION" >> $GITHUB_ENV
+
+      # Проверка на наличие изменений
+      - name: 📝 Проверка изменений
+        if: ${{ github.event.inputs.deploy_type == 'application' || github.event.inputs.deploy_type == 'full' }}
+        run: git status
+
+      # Коммит и пуш обновленной версии в репозиторий
+      - name: ✅ Коммит версии и CHANGELOG
+        if: ${{ github.event.inputs.deploy_type == 'application' || github.event.inputs.deploy_type == 'full' }}
+        run: |
+          git add CHANGELOG.md version.txt
+          git commit -m "chore(release): $VERSION_TAG" || echo "No changes to commit"
+          git push
+
+
+      # Создание GitHub релиза
+      - name: 🚀 Создание релиза на GitHub
+        if: ${{ github.event.inputs.deploy_type == 'application' || github.event.inputs.deploy_type == 'full' }}
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ env.VERSION_TAG }}
+          name: "Release ${{ env.VERSION_TAG }}"
+          body: ${{ env.LAST_CHANGES }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_PAT }}
+
+      # Настройка Python
+      - name: 🐍 Установка Python
+        if: ${{ github.event.inputs.deploy_type == 'application' || github.event.inputs.deploy_type == 'full' }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      # Установка зависимостей Python
+      - name: 📦 Установка зависимостей Python
+        if: ${{ github.event.inputs.deploy_type == 'application' || github.event.inputs.deploy_type == 'full' }}
+        run: |
+              python -m pip install --upgrade pip
+              pip install pip-tools
+              pip-compile --resolver=backtracking requirements.in
+              pip install -r requirements.txt
+          
+
+      - name: 📜 Генерация и извлечение CHANGELOG
+        if: ${{ github.event.inputs.deploy_type == 'application' || github.event.inputs.deploy_type == 'full' }}
+        id: changelog_python
+        run: |
+          pip install git-changelog
+          python generate_changelog_git_changelog.py
+          cat .version_env >> $GITHUB_ENV
+
+
+      # Формирование сообщения о деплое
+      - name: 🧾 Подготовка текста уведомления
+        id: deploy_message
+        run: |
+          TYPE="${{ github.event.inputs.deploy_type }}"
+          if [[ "$TYPE" == "application" ]]; then
+            TARGET="🖥️ Приложение Trainer FastAPI Application for Oasis of Clear Code"
+          elif [[ "$TYPE" == "infrastructure" ]]; then
+            TARGET="🧩 Инфраструктура Trainer FastAPI Application for Oasis of Clear Code"
+          elif [[ "$TYPE" == "mail" ]]; then
+            TARGET="📧 Почтовый сервис Trainer FastAPI Application for Oasis of Clear Code"
+          else
+            TARGET="🌐 Полный стек Trainer FastAPI Application for Oasis of Clear Code"
+          fi
+      
+          VERSION="${{ env.VERSION_TAG }}"
+          if [[ -z "$VERSION" ]]; then VERSION="не указана"; fi
+      
+          RELEASE_URL="https://github.com/OasisOfCleanCode/TrainerFastAPI/releases/tag/$VERSION"
+          MESSAGE="🎉 *${TARGET} задеплоен успешно!*%0A"
+          MESSAGE+="🧩 *Версия:* _$VERSION_%0A"
+          MESSAGE+="📅 *Дата:* _$(date +%d.%m.%Y)%0A"
+          MESSAGE+="📝 *Изменения:*%0A*${{ env.LAST_CHANGES_HEADER }}*%0A${{ env.LAST_CHANGES_CONTENT }}%0A"
+          MESSAGE+="🔗 [Перейти к релизу]($RELEASE_URL)"
+          echo "MESSAGE=$MESSAGE" >> $GITHUB_OUTPUT
+
+
+      # Сборка образа Docker приложения
+      - name: 🐳 Сборка Docker-образа
+        if: ${{ github.event.inputs.deploy_type == 'application' || github.event.inputs.deploy_type == 'full' }}
+        run: |
+          docker build -f Dockerfile -t tfa_app:${{ env.VERSION_TAG }} .
+
+      # Создание mailu.env файла
+      - name: 🛠️ Создание .env из секретов
+        run: |
+              echo "DOMAIN_URL=https://tfa.occ.dev/" >> .env
+              echo "BASE_TFA_API_URL=https://api.tfa.occ.dev/" >> .env
+              echo "BASE_TFA_MEDIA_URL=https://media.tfa.occ.dev" >> .env
+              echo "BASE_TG_MEDIA_URL=https://tg.tfa.occ.dev" >> .env
+              echo "APP_LOC=devveloper" >> .env
+              echo "TFA_TOKEN_ACCESS_SECRET_KEY=${{ secrets.TFA_TOKEN_ACCESS_SECRET_KEY }}" >> .env
+              echo "TELEGRAM_TOKEN_FOR_SEND_TELEBOT=${{ secrets.TELEGRAM_TOKEN_FOR_SEND_TELEBOT }}" >> .env
+              echo "CHAT_ID_FOR_SEND=${{ secrets.CHAT_ID_FOR_SEND }}" >> .env          
+              echo "CATALOG_PSTGR_NAME=${{ secrets.CATALOG_PSTGR_NAME }}" >> .env
+              echo "CATALOG_PSTGR_USER=${{ secrets.CATALOG_PSTGR_USER }}" >> .env
+              echo "CATALOG_PSTGR_PASS=${{secrets.CATALOG_PSTGR_PASS}}" >> .env
+              echo "CATALOG_PSTGR_HOST=${{secrets.CATALOG_PSTGR_HOST}}" >> .env
+              echo "CATALOG_PSTGR_PORT=${{secrets.CATALOG_PSTGR_PORT}}" >> .env
+              echo "MINIO_USER=${{ secrets.MINIO_USER }}" >> .env
+              echo "MINIO_PASS=${{ secrets.MINIO_PASS }}" >> .env
+              echo "MINIO_CATALOG_NAME=${{secrets.MINIO_CATALOG_NAME}}" >> .env
+              echo "MINIO_HOST=minio_noda1" >> .env
+              echo "MINIO_PORT=${{secrets.MINIO_PORT}}" >> .env 
+              echo "MINIO_DOMAIN=https://2minio.anwill.fun" >> .env 
+              echo "MINIO_SERVER_URL=https://2minio.anwill.fun/noda1" >> .env 
+              echo "MINIO_BROWSER_REDIRECT_URL=https://2minio.anwill.fun/ui" >> .env 
+              echo "RABBITMQ_USER=${{ secrets.RABBITMQ_USER }}" >> .env
+              echo "RABBITMQ_PASS=${{ secrets.RABBITMQ_PASS }}" >> .env
+              echo "RABBITMQ_HOST=${{secrets.RABBITMQ_HOST}}" >> .env
+              echo "RABBITMQ_PORT=${{secrets.RABBITMQ_PORT}}" >> .env
+              echo "REDIS_HOST=${{secrets.REDIS_HOST}}" >> .env
+              echo "REDIS_PORT=${{secrets.REDIS_PORT}}" >> .env
+              echo "REDIS_BAN_LIST_INDEX=${{secrets.REDIS_BAN_LIST_INDEX}}" >> .env
+              echo "REDIS_USER_INDEX=${{secrets.REDIS_USER_INDEX}}" >> .env
+              echo "REDIS_CATALOG_INDEX=${{secrets.REDIS_CATALOG_INDEX}}" >> .env
+              echo "REDIS_PLATFORM_INDEX=${{secrets.REDIS_PLATFORM_INDEX}}" >> .env
+              echo "REDIS_WIDGET_INDEX=${{secrets.REDIS_WIDGET_INDEX}}" >> .env
+              echo "REDIS_CELERY_INDEX=${{secrets.REDIS_CELERY_INDEX}}" >> .env
+              echo "REDIS_TASKIQ_INDEX=${{secrets.REDIS_TASKIQ_INDEX}}" >> .env
+              echo "VERSION_TAG=${{ env.VERSION_TAG }}" >> .env
+              echo "MAIL_USERNAME=${{ secrets.MAIL_USERNAME }}" >> .env
+              echo "MAIL_PASSWORD=${{ secrets.MAIL_PASSWORD }}" >> .env
+              echo "MAIL_PORT=${{secrets.MAIL_PORT}}" >> .env
+              echo "MAIL_SERVER=${{secrets.MAIL_SERVER}}" >> .env
+
+
+      - name: 📄 Копирование .env на сервер
+        run: |
+          scp -i ~/.ssh/tfa_dev_key -P ${{ secrets.DEV_SERVER_PORT }} .env ${{ secrets.DEV_SERVER_USER }}@${{ secrets.DEV_SERVER_IP }}:/tfa_projects/backend/tfa/.env
+
+
+      # Сохранение и загрузка образа Docker на сервер
+      - name: 📤 Сохранение и отправка Docker-образа
+        if: ${{ github.event.inputs.deploy_type == 'application' || github.event.inputs.deploy_type == 'full' }}
+        run: |
+          docker save tfa_app:${{ env.VERSION_TAG }} > tfa_app-${{ env.VERSION_TAG }}.tar
+          scp -i ~/.ssh/tfa_dev_key -P ${{ secrets.DEV_SERVER_PORT }} tfa_app-${{ env.VERSION_TAG }}.tar ${{ secrets.DEV_SERVER_USER }}@${{ secrets.DEV_SERVER_IP }}:/tfa_projects/backend/tfa/
+
+      # Копирование файла .env на сервер
+
+      # Загрузка образа Docker на сервер
+      - name: 📥 Загрузка Docker-образа на сервер
+        if: ${{ github.event.inputs.deploy_type == 'application' || github.event.inputs.deploy_type == 'full' }}
+        run: |
+          ssh -i ~/.ssh/tfa_dev_key -p ${{ secrets.DEV_SERVER_PORT }} ${{ secrets.DEV_SERVER_USER }}@${{ secrets.DEV_SERVER_IP }} "docker load < /tfa_projects/backend/tfa/tfa_app-${{ env.VERSION_TAG }}.tar"
+
+
+
+      - name: 🌐 Создать Docker Network, если не существует на удаленном
+        run: |
+          ssh -i ~/.ssh/tfa_dev_key -p ${{ secrets.DEV_SERVER_PORT }} ${{ secrets.DEV_SERVER_USER }}@${{ secrets.DEV_SERVER_IP }} << 'EOF'
+            docker network inspect tfa_dev_network >/dev/null 2>&1 || \
+            docker network create \
+              --driver bridge \
+              --subnet=172.18.0.0/16 \
+              --gateway=172.18.0.1 \
+              --attachable \
+              tfa_dev_network
+          EOF
+
+      - name: 🧠 Убедиться, что сеть существует
+        run: |
+          docker network inspect tfa_dev_network >/dev/null 2>&1 || \
+          docker network create \
+            --subnet=172.0.0.0/16 \
+            --gateway=172.0.0.1 \
+            tfa_dev_network
+
+
+      # Установка типа развертывания
+      - name: ⚙️ Определение типа деплоя
+        id: deploy_file
+        run: |
+          if [ "${{ github.event.inputs.deploy_type }}" == "application" ]; then
+            echo "COMPOSE_FILE=compose.catalog.app.dev.yml" >> $GITHUB_ENV
+            echo "SERVICE_NAME=" >> $GITHUB_ENV
+          elif [ "${{ github.event.inputs.deploy_type }}" == "infrastructure" ]; then
+            echo "COMPOSE_FILE=compose.infrastructure.dev.yml" >> $GITHUB_ENV
+            echo "SERVICE_NAME=" >> $GITHUB_ENV
+          else
+            echo "COMPOSE_FILE=compose.catalog.full.dev.yml" >> $GITHUB_ENV
+            echo "SERVICE_NAME=" >> $GITHUB_ENV
+          fi
+
+      # Копирование файла Docker Compose на сервер
+      - name: 📁 Копирование файлов на сервер
+        run: |
+          scp -i ~/.ssh/tfa_dev_key -P ${{ secrets.DEV_SERVER_PORT }} $COMPOSE_FILE ${{ secrets.DEV_SERVER_USER }}@${{ secrets.DEV_SERVER_IP }}:/tfa_projects/backend/tfa/compose.yaml
+          scp -i ~/.ssh/tfa_dev_key -P ${{ secrets.DEV_SERVER_PORT }} Dockerfile ${{ secrets.DEV_SERVER_USER }}@${{ secrets.DEV_SERVER_IP }}:/tfa_projects/backend/tfa/Dockerfile
+          scp -i ~/.ssh/tfa_dev_key -P ${{ secrets.DEV_SERVER_PORT }} requirements.in ${{ secrets.DEV_SERVER_USER }}@${{ secrets.DEV_SERVER_IP }}:/tfa_projects/backend/tfa/requirements.in
+      
+
+      # Запуск развертывания приложения на сервере
+      - name: 🚀 Развёртывание приложения
+        run: |
+          ssh -i ~/.ssh/tfa_dev_key -p ${{ secrets.DEV_SERVER_PORT }} ${{ secrets.DEV_SERVER_USER }}@${{ secrets.DEV_SERVER_IP }} "
+          export VERSION_TAG=${{ env.VERSION_TAG }} && cd /tfa_projects/backend/tfa && 
+          docker compose -f compose.yaml up -d --force-recreate"
+
+      # Удаление неиспользуемых образов Docker на сервере
+      - name: 🧹 Очистка неиспользуемых образов
+        run: |
+          ssh -i ~/.ssh/tfa_dev_key -p ${{ secrets.DEV_SERVER_PORT }} ${{ secrets.DEV_SERVER_USER }}@${{ secrets.DEV_SERVER_IP }} "docker images -q --filter 'dangling=true' | xargs -r docker rmi"
+
+      # Очистка отправленных файлов с сервера
+      - name: 🗑️ Удаление загруженных образов
+        run: |
+          ssh -i ~/.ssh/tfa_dev_key -p ${{ secrets.DEV_SERVER_PORT }} ${{ secrets.DEV_SERVER_USER }}@${{ secrets.DEV_SERVER_IP }} "rm -f /tfa_projects/backend/tfa/tfa_app-*"
+
+      # Удаление старых образов Docker на сервере
+      - name: ♻️ Удаление старых версий образов
+        run: |
+          ssh -i ~/.ssh/tfa_dev_key -p ${{ secrets.DEV_SERVER_PORT }} ${{ secrets.DEV_SERVER_USER }}@${{ secrets.DEV_SERVER_IP }} "docker images tfa_app | tail -n +2 | grep -v ${{ env.VERSION_TAG }} | awk '{print \$3}' | xargs -r docker rmi"
+
+      - name: 📦 Свободное место в Docker (после)
+        run: docker system df
+
+      # Отправка уведомления в Telegram
+      - name: 📨 Уведомление в Telegram
+        run: |
+          curl -X POST https://api.telegram.org/bot${{ secrets.TELEGRAM_TOKEN_FOR_SEND_TELEBOT }}/sendMessage \
+          -d chat_id=${{ secrets.CHAT_ID_FOR_SEND }} \
+          -d text="${{ steps.deploy_message.outputs.MESSAGE }}" \
+          -d parse_mode="Markdown"

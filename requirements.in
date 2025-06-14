@@ -1,0 +1,47 @@
+# Database
+SQLAlchemy
+alembic
+asyncpg
+psycopg2-binary
+
+# FastAPI & ASGI
+fastapi
+fastapi_mail
+uvicorn[standard]
+
+# HTTP clients
+httpx
+
+# Logging
+git-changelog
+loguru
+
+# Other
+aiobotocore
+aiosmtplib
+bcrypt
+black
+gunicorn
+idna
+jose
+pillow
+pydantic
+pydantic-settings
+pydantic_core
+python-dotenv
+slowapi
+
+# Redis
+redis
+
+# Security
+passlib
+python-jose
+
+# Templates & Forms
+Jinja2
+python-multipart
+
+# Testing
+pytest
+pytest-asyncio
