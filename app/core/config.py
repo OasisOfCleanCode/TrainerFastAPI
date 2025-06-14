@@ -16,41 +16,55 @@ class ModeEnum(str, Enum):
     production = "production"
     testing = "testing"
 
-class Settings(BaseSettings):
-    TELEGRAM_TOKEN: str
-    CHAT_ID: int
 
+class Settings(BaseSettings):
+    class Config:
+        env_file = BASE_DIR / '.env'
+        env_file_encoding = "utf-8"
+
+
+class AppMetaSettings(Settings):
+    APP_MODE: ModeEnum = ModeEnum.development
+    VERSION_TAG: str = "v1.0.0"
+
+
+class UrlSetting(Settings):
+    DOMAIN_URL: str
+    CORS_ALLOWED_ORIGINS: list[str] = [
+    ]
+
+
+class TelegramBotSetting(Settings):
+    TELEGRAM_TOKEN_FOR_SEND_TELEBOT: str
+    CHAT_ID_FOR_SEND: int
+
+
+
+
+class ApiTokens(Settings):
     TFA_TOKEN_ACCESS_SECRET_KEY: str
     TFA_TOKEN_REFRESH_SECRET_KEY: str
     ALGORITHM: str = "HS256"
 
-    # PostgreSQL credentials
-    CATALOG_PSTGR_USER: str
-    CATALOG_PSTGR_PASS: str
-    CATALOG_PSTGR_HOST: str
-    CATALOG_PSTGR_PORT: str
-    CATALOG_PSTGR_NAME: str
 
-    RABBITMQ_USER: str
-    RABBITMQ_PASS: str
-    RABBITMQ_HOST: str
-    RABBITMQ_PORT: str
+class DataBaseSettings(Settings):
 
-    REDIS_HOST: str
-    REDIS_PORT: str
-    REDIS_PASSWORD: str = os.environ.get("REDIS_PASSWORD")
-    REDIS_BAN_LIST_INDEX: str
-    REDIS_USER_INDEX: str
+    TAPI_PSTGR_USER: str
+    TAPI_PSTGR_PASS: str
+    TAPI_PSTGR_NAME: str
+    TAPI_PSTGR_HOST: str
+    TAPI_PSTGR_PORT: str
 
-    MAIL_USERNAME: str
-    MAIL_PASSWORD: str
-    MAIL_PORT: str
-    MAIL_SERVER: str
+    TAPI_RABBITMQ_USER: str
+    TAPI_RABBITMQ_PASS: str
+    TAPI_RABBITMQ_HOST: str
+    TAPI_RABBITMQ_PORT: str
 
-    DOMAIN_URL: str
-
-    CORS_ALLOWED_ORIGINS: list[str] = [
-    ]
+    TAPI_REDIS_HOST: str
+    TAPI_REDIS_PORT: str
+    TAPI_REDIS_PASSWORD: str
+    TAPI_REDIS_BAN_LIST_INDEX: str
+    TAPI_REDIS_USER_INDEX: str
 
     @property
     def async_tapi_pstgr_url(self) -> str:
@@ -74,8 +88,9 @@ class Settings(BaseSettings):
             f"{self.TAPI_PSTGR_PORT}"
         )
 
-    class Config:
-        env_file = BASE_DIR / '.env'
-        env_file_encoding = "utf-8"
 
-settings = Settings()
+
+app_meta_settings = AppMetaSettings()
+url_setting = UrlSetting()
+api_tokens_setting = ApiTokens()
+db_settings = DataBaseSettings()

@@ -9,12 +9,10 @@ from dotenv import load_dotenv
 from sqlalchemy import create_engine, text, pool  # добавили text для SQL-запроса
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
-from app.core.config import PSTGR_USER, PSTGR_PASS, PSTGR_HOST, PSTGR_PORT, PSTGR_NAME
 from app.db.models.base_sql import BaseSQL
 from app.db.models import User, Service, Token, Profile, Role, EmailVerificationToken, ChangeEmailVerificationToken, ResetPasswordToken
 
 load_dotenv()
-PSTGR_URL = f"postgresql+asyncpg://{PSTGR_USER}:{PSTGR_PASS}@{PSTGR_HOST}:{PSTGR_PORT}/{PSTGR_NAME}"
 
 # Загружаем конфигурацию Alembic
 config = context.config
