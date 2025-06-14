@@ -17,7 +17,7 @@ setup(
     long_description_content_type="text/markdown",
     author="dmitrij-el",
     author_email="",
-    url="https://github.com/OasisOfCleanCode/trainer-api",  # Укажи актуальный URL
+    url="https://github.com/OasisOfCleanCode/TrainerAPI",
     packages=find_packages(),
     include_package_data=True,
     install_requires=install_requires,
