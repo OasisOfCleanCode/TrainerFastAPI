@@ -30,6 +30,8 @@ pydantic-settings
 pydantic_core
 python-dotenv
 slowapi
+setuptools
+pip-tools
 
 # Redis
 redis

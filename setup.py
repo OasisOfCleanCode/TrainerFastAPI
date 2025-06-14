@@ -10,7 +10,7 @@ def parse_requirements(filename):
 install_requires = parse_requirements("requirements.in")
 
 setup(
-    name="web_app",
+    name="TrainerAPI",
     version=get_app_version(),
     description="Trainer API Application — part of the Oasis of Clean Code project",
     long_description=open("README.md", encoding="utf-8").read(),
