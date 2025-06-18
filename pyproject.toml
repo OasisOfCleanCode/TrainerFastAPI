@@ -1,0 +1,77 @@
+[build-system]
+requires = ["setuptools>=61", "setuptools_scm[toml]", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "trainer-api"
+description = "Trainer API Application — part of the Oasis of Clean Code project"
+readme = "README.md"
+requires-python = ">=3.12"
+license = {text = "MIT"}
+authors = [{ name = "dmitrij-el", email = "dmitrijelectro@gmail.com" }]
+dynamic = ["version"]
+dependencies = [
+    # Database
+    "SQLAlchemy",
+    "alembic",
+    "asyncpg",
+    "psycopg2-binary",
+
+    # FastAPI & ASGI
+    "fastapi",
+    "fastapi-mail",
+    "uvicorn[standard]",
+
+    # HTTP clients
+    "httpx",
+
+    # Logging
+    "git-changelog",
+    "loguru",
+
+    # Other
+    "aiobotocore",
+    "aiosmtplib",
+    "bcrypt",
+    "black",
+    "gunicorn",
+    "idna",
+    "jose",
+    "pillow",
+    "pydantic",
+    "pydantic-settings",
+    "pydantic-core",
+    "python-dotenv",
+    "slowapi",
+
+    # Redis
+    "redis",
+
+    # Security
+    "passlib",
+    "python-jose",
+
+    # Templates & Forms
+    "jinja2",
+    "python-multipart",
+
+    # Testing
+    "pytest",
+    "pytest-asyncio",
+
+    # Worker
+    "celery"
+]
+
+[project.urls]
+Source = "https://github.com/OasisOfCleanCode/TrainerAPI"
+PrivacyPolicy = "https://raw.githubusercontent.com/OasisOfCleanCode/TrainerAPI/dev/templates/privacy_policy_oasis.html"
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["app"]
+
+[tool.setuptools_scm]
+version_file = "version.txt"

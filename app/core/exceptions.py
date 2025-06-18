@@ -100,6 +100,11 @@ class CSRFException(TokenException):
         super().__init__("CSRF токен отсутствует или недействителен", error_code="1012")
 
 
+class ForbiddenAccessException(HTTPException):
+    def __init__(self):
+        super().__init__("Недостаточно прав!")
+
+
 # --------------------------------------------------
 # Пользователи (11xx)
 # --------------------------------------------------

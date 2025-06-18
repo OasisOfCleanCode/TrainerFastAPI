@@ -2,6 +2,7 @@
 
 import os
 
+from app.core.config import BASE_PATH
 from app.utils.logger import logger
 
 
@@ -13,9 +14,10 @@ def get_readable_size(size_bytes):
 
 
 def generate_folder_structure(path, exclusions, output_file):
-    structure = []
-    structure.append("Mode            Length Hierarchy\n")
-    structure.append("----            ------ ---------\n")
+    structure = ["Mode            Length Hierarchy\n",
+                 "----            ------ ---------\n"]
+
+    path = str(path)
 
     for root, dirs, files in os.walk(path):
         # Удаляем исключенные папки из обхода
@@ -43,7 +45,7 @@ def generate_folder_structure(path, exclusions, output_file):
 
 
 if __name__ == "__main__":
-    base_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+    base_path = BASE_PATH
     exclusions = [
         ".venv",
         ".git",
@@ -57,5 +59,5 @@ if __name__ == "__main__":
         ".mypy_cache",
         "build",
     ]
-    output_file = "project_structure.txt"
+    output_file = BASE_PATH / "descriptions" / "project_structure.txt"
     generate_folder_structure(base_path, exclusions, output_file)

@@ -1,7 +1,6 @@
 # deploy/notify_telegram.py
 
 import os
-import requests  
 from pathlib import Path
 
 from app.core.config import TELEGRAM_TOKEN_FOR_SEND_TELEBOT, CHAT_ID_FOR_SEND

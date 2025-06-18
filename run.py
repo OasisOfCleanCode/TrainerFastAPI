@@ -1,6 +1,5 @@
 # app/app.py
 
-import os
 from pathlib import Path
 
 import uvicorn
@@ -12,10 +11,10 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import RedirectResponse
 
 from app.core.config import BASE_PATH
-from version import get_app_version
+from scripts.version import get_app_version
 from app.core.templates import templates
-from app.fast_api.v1.endpoints import site as web_routes
-from app.fast_api.v1.endpoints import info as info_routers
+from app.api.v1.endpoints import site as web_routes
+from app.api.v1.endpoints import info as info_routers
 
 from app.utils.logger import logger
 from app.core.error_handlers import setup_exception_handlers

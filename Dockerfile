@@ -1,37 +1,28 @@
-# Dockerfile
-
+# Базовый образ с Python 3.12
 FROM python:3.12-slim
 
-# Системные зависимости
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-    gcc \
-    libpq-dev \
-    netcat-openbsd \
-    curl \
-    && rm -rf /var/lib/apt/lists/*
 
+ENV PYTHONUNBUFFERED=1
+
+# Устанавливаем системные зависимости (для psycopg2 и др.)
+RUN apt-get update && apt-get install -y gcc libpq-dev && rm -rf /var/lib/apt/lists/*
+
+# Устанавливаем рабочую директорию
 WORKDIR /app
 
-# Сначала копируем только зависимости (для кеширования)
-COPY requirements.in ./
-COPY setup.py ./
-COPY README.md ./
-COPY version.py ./deploy/version.py
+# Копируем pyproject.toml и version.txt для установки зависимостей
+COPY pyproject.toml .
+COPY version.txt .
 
+# Обновляем pip и устанавливаем зависимости
+RUN pip install --upgrade pip
+RUN pip install .
 
-# Устанавливаем зависимости
-RUN pip install --upgrade pip && \
-    pip install --no-cache-dir pip-tools && \
-    pip-compile requirements.in && \
-    pip install --no-cache-dir -r requirements.txt
-
-# Затем копируем всё остальное
+# Копируем остальной код
 COPY . .
 
-# Устанавливаем проект как пакет
-RUN pip install --no-cache-dir -e .
-
+# Открываем порт (по желанию)
 EXPOSE 8666
 
-CMD ["gunicorn", "-c", "/app/alembic.ini", "/app/gunicorn.conf.py", "run:app"]
+# Запускаем приложение
+CMD ["gunicorn", "--config", "gunicorn.conf.py", "run:app"]

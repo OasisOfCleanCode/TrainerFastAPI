@@ -176,9 +176,23 @@ class RedisMqSetting(Settings):
         )
 
 
+class MailSenderConfig(Settings):
+    TAPI_MAIL_USERNAME: str
+    TAPI_MAIL_PASSWORD: str
+    TAPI_MAIL_SERVER: str
+    TAPI_MAIL_PORT: int
+
+
+class UrlsToServices(Settings):
+    BASE_URL: str = "https://occ.dev/"
+    BASE_USER_URL: str = "https://id.occ.dev/"
+    BASE_USER_API_URL: str = "https://id.api.occ.dev/"
+
+
 # =======================
 # ✅ Lazy-access обёртки
 # =======================
+
 
 @lru_cache()
 def get_app_settings() -> AppMetaSettings:
@@ -213,3 +227,13 @@ def get_redis_settings() -> RedisMqSetting:
 @lru_cache()
 def get_telegram_settings() -> TelegramBotSetting:
     return TelegramBotSetting()
+
+
+@lru_cache()
+def get_mail_sender_config() -> MailSenderConfig:
+    return MailSenderConfig()
+
+
+@lru_cache()
+def get_urls_to_services() -> UrlsToServices:
+    return UrlsToServices()

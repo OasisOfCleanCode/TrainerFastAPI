@@ -10,8 +10,7 @@ from PIL import Image, UnidentifiedImageError
 from minio import Minio
 from minio.error import S3Error
 from config import MINIO_HOST, MINIO_PORT, MINIO_USER, MINIO_PASS, MINIO_CATALOG_NAME, BASE_PHOTO_PATH
-from loguru import logger
-from fastapi.responses import StreamingResponse
+from app.utils.logger import loggerfrom fastapi.responses import StreamingResponse
 from fastapi import HTTPException
 
 
@@ -108,7 +107,7 @@ class S3Client:
             raise HTTPException(status_code=500, detail="Неизвестная ошибка при подготовке и загрузке")
 
     @classmethod
-    async def upload_photo_and_preview(cls, photo_id: str, orig_file_bytes: bytes, preview_file_bytes: bytes, date: datetime) -> tuple[str, str]:
+    async def upload_photo_and_preview(photo_id: str, orig_file_bytes: bytes, preview_file_bytes: bytes, date: datetime) -> tuple[str, str]:
         logger.info("Загрузка файлов в S3")
         date_str = date.strftime("%Y-%m-%d")
         orig_key = f"{date_str}/{photo_id}/orig.webp"
@@ -137,7 +136,7 @@ class S3Client:
         return orig_key, preview_key
 
     @classmethod
-    async def local_upload_photo_and_preview(cls, photo_id: str, orig_file_bytes: bytes, preview_file_bytes: bytes, date: datetime) -> tuple[str, str]:
+    async def local_upload_photo_and_preview(photo_id: str, orig_file_bytes: bytes, preview_file_bytes: bytes, date: datetime) -> tuple[str, str]:
         logger.info("Загрузка файлов локально")
         date_str = date.strftime("%Y-%m-%d")
         orig_key = f"{date_str}/{photo_id}/orig.webp"
@@ -185,7 +184,7 @@ class S3Client:
         return orig_key, preview_key
 
     @classmethod
-    async def delete_photo_file(cls, link: str, use_s3: bool = True):
+    async def delete_photo_file(link: str, use_s3: bool = True):
         logger.info(f"Удаление файла: {link}")
         try:
             if use_s3:

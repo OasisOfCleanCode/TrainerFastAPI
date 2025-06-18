@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 from sqlalchemy import create_engine, text, pool  # добавили text для SQL-запроса
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
-from app.db.models.base_sql import BaseSQL
+from app.db.models.base_sql import IntIdSQL
 from app.db.models import User, Service, Token, Profile, Role, EmailVerificationToken, ChangeEmailVerificationToken, ResetPasswordToken
 from app.core.config import db_settings
 
@@ -23,7 +23,7 @@ if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
 # Метаданные всех моделей для генерации миграций
-target_metadata = BaseSQL.metadata
+target_metadata = IntIdSQL.metadata
 
 def get_migration_name():
     # Получаем текущее время с секундами

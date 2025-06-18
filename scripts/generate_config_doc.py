@@ -45,16 +45,19 @@ config = importlib.util.module_from_spec(spec)
 sys.modules["config"] = config
 spec.loader.exec_module(config)
 
+
 # Markdown-документация
 def generate_config_doc() -> str:
     output = ["# 📦 Документация настроек конфигурации\n"]
 
     for name, cls in getmembers(config):
-        if isclass(cls) and issubclass(cls, config.Settings) and cls is not config.Settings:
+        if isclass(cls) and issubclass(config.Settings) and cls is not config.Settings:
             section = [f"## 🔹 {name}"]
             try:
                 for field, field_info in cls.model_fields.items():
-                    field_type = getattr(field_info.annotation, '__name__', str(field_info.annotation))
+                    field_type = getattr(
+                        field_info.annotation, "__name__", str(field_info.annotation)
+                    )
                     if field_info.default is PydanticUndefined:
                         default = "(required)"
                     else:
@@ -66,12 +69,13 @@ def generate_config_doc() -> str:
 
     return "\n".join(output)
 
+
 # .env.example
 def generate_env_example() -> str:
     output = ["# 🔧 .env.example — сгенерирован автоматически\n"]
 
     for name, cls in getmembers(config):
-        if isclass(cls) and issubclass(cls, config.Settings) and cls is not config.Settings:
+        if isclass(cls) and issubclass(config.Settings) and cls is not config.Settings:
             output.append(f"# ▶️ {name}")
             try:
                 for field, field_info in cls.model_fields.items():
@@ -86,6 +90,7 @@ def generate_env_example() -> str:
             output.append("")  # пустая строка между блоками
 
     return "\n".join(output)
+
 
 # Вступление
 intro_md = f"""# 📘 Конфигурация проекта: автогенерация

@@ -3,11 +3,12 @@
 import os
 from pathlib import Path
 
+from app.core.config import BASE_PATH
 from app.utils.logger import logger
 
 
 def counting_rows():
-    directory = Path(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+    directory = BASE_PATH
     line_count = 0
 
     for f in directory.rglob('*.py'):

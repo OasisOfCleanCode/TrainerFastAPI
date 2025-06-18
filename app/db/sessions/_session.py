@@ -1,7 +1,6 @@
 from typing import Callable, Optional, AsyncGenerator, Generator
 
-from loguru import logger
-from functools import wraps
+from app.utils.logger import loggerfrom functools import wraps
 from contextlib import asynccontextmanager, \
     contextmanager  # это декоратор для создания асинхронных контекстных менеджеров.
 
