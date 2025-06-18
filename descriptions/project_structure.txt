@@ -33,7 +33,7 @@ d----         57.93 KB                     user
 -a---         17.05 KB                         ├── me.py
 -a---          3.96 KB                         ├── profile.py
 -a---           0.00 B                         ├── __init__.py
-d----         67.27 KB         core
+d----         61.34 KB         core
 -a---          6.65 KB             ├── config.py
 -a---         974.00 B             ├── error_handlers.py
 -a---         10.20 KB             ├── exceptions.py
@@ -41,7 +41,6 @@ d----         67.27 KB         core
 -a---         25.17 KB             ├── responses.py
 -a---          12.00 B             ├── security.py
 -a---         209.00 B             ├── templates.py
--a---          5.93 KB             ├── text_content.py
 -a---           0.00 B             ├── __init__.py
 d----          6.77 KB             security
 -a---          5.83 KB                 ├── auth.py
@@ -86,8 +85,8 @@ d----         560.00 B             celery
 -a---         367.00 B                 ├── init_app.py
 -a---         193.00 B                 ├── tasks.py
 -a---           0.00 B                 ├── __init__.py
-d----          8.26 KB             mail_sender
--a---          4.93 KB                 ├── logic.py
+d----          8.09 KB             mail_sender
+-a---          4.76 KB                 ├── logic.py
 -a---          3.33 KB                 ├── notifier.py
 -a---           0.00 B                 ├── __init__.py
 d----         11.89 KB             s3
@@ -109,9 +108,9 @@ d----          5.25 KB     deploy
 -a---          2.00 KB         ├── compose.trainerapi.infrastructure.yml
 -a---         753.00 B         ├── compose.trainerapi.web_app.yml
 -a---           0.00 B         ├── __init__.py
-d----         10.13 KB     descriptions
+d----         10.31 KB     descriptions
 -a---          2.00 KB         ├── config_settings.md
--a---          8.13 KB         ├── project_structure.txt
+-a---          8.31 KB         ├── project_structure.txt
 -a---           0.00 B         ├── TrainerAPI.md
 -a---           0.00 B         ├── TrainerAPI_info.md
 d----          1.88 MB     dist
@@ -148,6 +147,9 @@ d----           0.00 B         layouts
 d----           0.00 B         partials
 -a---           0.00 B             ├── footer.html
 -a---           0.00 B             ├── header.html
-d----          4.57 KB         service_templates
+d----          3.49 KB         service_templates
 -a---          3.49 KB             ├── privacy_policy_oasis.html
--a---          1.08 KB             ├── verify_base_template.html
+d----          3.52 KB             emails
+-a---          1.14 KB                 ├── reset_password.html
+-a---          1.20 KB                 ├── verify_change_email_address.html
+-a---          1.18 KB                 ├── verify_email_address.html
