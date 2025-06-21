@@ -2,9 +2,7 @@
 
 from taskiq_redis import ListQueueBroker
 
-from config import REDIS_HOST, REDIS_PORT, REDIS_TASKIQ_INDEX
+from app.core.config import get_redis_settings
 
 
-taskiq_redis_broker = ListQueueBroker(
-    f"redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_TASKIQ_INDEX}"
-)
+taskiq_redis_broker = ListQueueBroker(get_redis_settings().tapi_redis_broker_url)

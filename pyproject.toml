@@ -16,6 +16,7 @@ dependencies = [
     "alembic",
     "asyncpg",
     "psycopg2-binary",
+    "minio",
 
     # FastAPI & ASGI
     "fastapi",
@@ -60,7 +61,8 @@ dependencies = [
     "pytest-asyncio",
 
     # Worker
-    "celery"
+    "celery",
+    "taskiq_redis"
 ]
 
 [project.urls]

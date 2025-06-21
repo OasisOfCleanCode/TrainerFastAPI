@@ -1,4 +1,3 @@
-import re
 from datetime import datetime, timezone
 from typing import List
 
@@ -14,6 +13,7 @@ from app.core.exceptions import (
     UserNotFoundException,
     RoleAlreadyAssignedException,
     RoleNotAssignedException,
+    DeleteException,
 )
 from app.core.responses import (
     users_get_resps,
@@ -24,8 +24,9 @@ from app.core.responses import (
     role_del_resps,
 )
 from app.core.security.auth import get_current_user
-from app.db.dao.base_dao import UserDAO
+from app.db.dao.user import UserDAO
 from app.db.models import User, Role, UserRole
+from app.db.models.enums import BanTimeEnum
 from app.db.schemas.user import (
     SUserInfoRole,
     CheckEmailModel,
@@ -33,8 +34,10 @@ from app.db.schemas.user import (
     CheckPhoneModel,
     SRoleInfo,
     RoleModel,
+    CheckTimeBan,
 )
 from app.db.sessions import SessionDep, TransactionSessionDep
+from app.services.mail_sender.logic import send_verify_email_to_user
 from app.utils.logger import logger
 
 admin_router = APIRouter()
@@ -305,7 +308,7 @@ async def post_user_role(
     if user_data is None:
         logger.remove()
         raise UserNotFoundException
-    check_user = await UserDAO.find_one_or_none_by_id(db=db, data_id=id.id)
+    check_user = await UserDAO.find_one_user_or_none_by_id(db=db, data_id=id.id)
     if check_user is None:
         logger.remove()
         raise UserNotFoundException
@@ -324,7 +327,7 @@ async def post_user_role(
         raise RoleAlreadyAssignedException
 
     # Добавляем связь между role и user
-    check_user.roles_assoc.append(UserRole(role=role))  # И к пользователю
+    check_user.roles.append(UserRole(role=role))  # И к пользователю
     await db.flush()
     # Валидация и возврат результата
     user = SUserInfoRole.model_validate(check_user)
@@ -353,7 +356,7 @@ async def delete_user_role(
     if user_data is None:
         logger.remove()
         raise UserNotFoundException
-    check_user = await UserDAO.find_one_or_none_by_id(db=db, data_id=id.id)
+    check_user = await UserDAO.find_one_user_or_none_by_id(db=db, data_id=id.id)
     if check_user is None:
         logger.remove()
         raise UserNotFoundException
@@ -373,9 +376,9 @@ async def delete_user_role(
         user = SUserInfoRole.model_validate(check_user)
         return user
     except SQLAlchemyError as e:
-        logger.error(f"Ошибка у user: {check_user.id}, {name_model} - delete_role: {e}")
+        logger.error(f"Ошибка у user: {check_user.id} - delete_role: {e}")
         logger.remove()
-        raise DeleteErrorException
+        raise DeleteException
 
 
 @admin_router.put("/{id}/ban_on", responses=role_post_resps)
@@ -402,7 +405,7 @@ async def ban_on_user(
     if user_data is None:
         logger.remove()
         raise UserNotFoundException
-    check_user = await UserDAO.find_one_or_none_by_id(db=db, data_id=id.id)
+    check_user = await UserDAO.find_one_user_or_none_by_id(db=db, data_id=id.id)
     if check_user is None:
         logger.remove()
         raise UserNotFoundException
@@ -437,7 +440,7 @@ async def ban_off_user(
     if user_data is None:
         logger.remove()
         raise UserNotFoundException
-    check_user = await UserDAO.find_one_or_none_by_id(db=db, data_id=id.id)
+    check_user = await UserDAO.find_one_user_or_none_by_id(db=db, data_id=id.id)
     if check_user is None:
         logger.remove()
         raise UserNotFoundException

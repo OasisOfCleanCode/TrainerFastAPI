@@ -66,7 +66,7 @@ class AbstractBaseSQL(AsyncAttrs, DeclarativeBase):
     created_at: Mapped[created_at]
     updated_at: Mapped[updated_at]
 
-    def __init_subclass__(**kwargs):
+    def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
         # Проверяем, что это прямой наследник BaseDAO, а не внутренний класс SQLAlchemy
         if cls.__bases__[0] == AbstractBaseSQL:
@@ -156,7 +156,7 @@ class IntIdSQL(AbstractBaseSQL):
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
 
-    def __init_subclass__(**kwargs):
+    def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
         # Проверяем, что это прямой наследник BaseDAO, а не внутренний класс SQLAlchemy
         if cls.__bases__[0] == IntIdSQL:
@@ -174,7 +174,7 @@ class UuIdSQL(AbstractBaseSQL):
         UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
     )
 
-    def __init_subclass__(**kwargs):
+    def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
         if cls.__bases__[0] == UuIdSQL:
             logger.info(f"{cls.__name__} инициализирован")

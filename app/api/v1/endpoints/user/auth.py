@@ -30,6 +30,7 @@ from app.core.exceptions import (
 from app.core.responses import register_resps, login_resps, logout_resps
 from app.core.security.auth import get_current_user, response_access_refresh_token
 from app.core.security.csfr import validate_csrf_token
+from app.db.dao.user import UserDAO
 
 from app.db.models import User, Profile, Role, UserRole, Token
 from app.db.models.enums import TokenTypeEnum
@@ -40,6 +41,7 @@ from app.services.auth.token_service import (
     creating_recording_all_token_to_user,
     creating_recording_access_token_to_user,
 )
+from app.services.mail_sender.logic import send_verify_email_to_user
 from app.utils.logger import logger
 
 if TYPE_CHECKING:
@@ -102,13 +104,13 @@ async def register_user(
 
     if user_data.email:
         email_mess = f"email {user_data.email}"
-        user_email = await find_one_user_or_none(
+        user_email = await UserDAO.find_one_user_or_none(
             db=db, filters=EmailModel(email=user_data.email)
         )
 
     if user_data.phone_number:
         phone_mess = f"телефоном {user_data.phone_number}"
-        user_phone = await find_one_user_or_none(
+        user_phone = await UserDAO.find_one_user_or_none(
             db=db, filters=PhoneModel(phone_number=user_data.phone_number)
         )
 
@@ -146,7 +148,9 @@ async def register_user(
         roles = await db.scalars(stmt)
         for role in roles:
             role.users_assoc.append(UserRole(user=new_user))
-    user = await find_one_user_or_none_by_id_with_tokens(db=db, data_id=new_user.id)
+    user = await UserDAO.find_one_user_or_none_by_id_with_tokens(
+        db=db, data_id=new_user.id
+    )
     access_token, refresh_token = await creating_recording_all_token_to_user(
         db=db, user=user, token_scopes=scopes_rights
     )
@@ -354,7 +358,9 @@ async def refresh(request: Request, db: TransactionSessionDep):
             raise UserIdNotFoundException
         user_id = int(user_id)
 
-        user = await find_one_user_or_none_by_id_with_tokens(data_id=user_id, db=db)
+        user = await UserDAO.find_one_user_or_none_by_id_with_tokens(
+            data_id=user_id, db=db
+        )
         if user is None:
             logger.remove()
             raise UserNotFoundException

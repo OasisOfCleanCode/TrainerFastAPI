@@ -52,27 +52,6 @@ PYDANTIC = TypeVar("PYDANTIC", bound=BaseModel)
 SQL = TypeVar("SQL", bound=IntIdSQL)
 
 
-class AdminAPI(BeaHeaUserAPI):
-
-    def __init__(self):
-        super().__init__()
-        # Установка маршрутов и тегов
-        self.prefix = f"/user"
-        self.tags = ["Admin Panel"]
-        self.router = APIRouter(prefix=self.prefix, tags=self.tags)
-
-    async def setup_routes(self):
-
-        await self.get_user_by_id()
-        await self.get_user_by_email()
-        await self.get_user_by_phone_number()
-        await self.get_users()
-        await self.get_user_roles()
-        await self.post_user_role()
-        await self.delete_user_role()
-        await self.ban_on_user()
-        await self.ban_off_user()
-
 
 class SecurityAPI(AuthAPI):
     def __init__(self):
