@@ -52,7 +52,6 @@ PYDANTIC = TypeVar("PYDANTIC", bound=BaseModel)
 SQL = TypeVar("SQL", bound=IntIdSQL)
 
 
-
 class SecurityAPI(AuthAPI):
     def __init__(self):
         super().__init__()
