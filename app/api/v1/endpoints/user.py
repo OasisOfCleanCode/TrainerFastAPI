@@ -1,47 +1,29 @@
 # app/api/v1/endpoints/user.py
 
-import re
-from datetime import timedelta, datetime, timezone
-from typing import List, TypeVar
+from datetime import datetime, timezone
+from typing import TypeVar
 
-from fastapi.security import OAuth2PasswordRequestForm
-from jose import JWTError, jwt
 from app.utils.logger import logger
 from pydantic import BaseModel
 from fastapi.responses import JSONResponse, HTMLResponse
-from fastapi import APIRouter, Response, Depends, Request, Security, Path
-from sqlalchemy import select, delete
+from fastapi import APIRouter, Response, Depends, Security, Path
+from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
 
 from app.db.dao.base_dao import BaseDAO
-from app.db.dao.user import UsersDAO, AuthDAO
-from app.db.models.associations import UserRole
 from app.db.models.base_sql import IntIdSQL
 
 from app.core.exceptions import *
 from app.core.responses import *
-from app.db.models.enums import BanTimeEnum, TokenTypeEnum
 from app.db.models.user import (
     User,
-    Profile,
     Role,
-    Token,
     EmailVerificationToken,
     ChangeEmailVerificationToken,
     ResetPasswordToken,
 )
 from app.db.schemas.user import (
-    ProfileModel,
-    CheckIDModel,
-    RoleModel,
-    CheckTimeBan,
-    SUserRefreshPassword,
-    SUserRegister,
-    EmailModel,
-    SUserAddDB,
-    PhoneModel,
     CheckTokenModel,
     ResetPasswordSchema,
 )
@@ -228,134 +210,3 @@ class BackgroundAPI(AuthAPI):
         await self.verify_email()
         await self.verify_email_for_change_email()
         await self.applying_new_password()
-
-    async def verify_email(self):
-        @self.router.get("/email/verify/{token}", response_class=HTMLResponse)
-        async def verify_email(
-            token: str = Path(), db: AsyncSession = TransactionSessionDep
-        ):
-            """
-            ## Endpoint верификации email адреса.
-
-            ### Описание
-            - Ручной способ верификации по токену.
-            - Возвращает сообщение о статусе операции.
-            - Endpoint доступен для всех.
-
-            ### Требования
-            - Этот эндпоинт требует передачи данных в строке запроса.
-            - Пользователь не должен быть авторизован.
-            """
-            verify_token = CheckTokenModel(token=token)
-            token_data = await db.execute(
-                select(EmailVerificationToken).where(
-                    EmailVerificationToken.token == verify_token.token
-                )
-            )
-            token_data = token_data.scalar_one_or_none()
-            if not token_data:
-                return TokenNotFoundException
-            if datetime.now(timezone.utc) > token_data.expires_at or token_data.ban:
-                return TokenExpiredException
-            email_schema = CheckEmailModel(email=token_data.email)
-            check_user = await UsersDAO.find_one_or_none(db=db, filters=email_schema)
-            if not check_user:
-                return UserNotFoundException
-            token_data.ban = True
-            check_user.is_email_confirmed = True
-            await db.flush()
-            return JSONResponse(
-                status_code=200,
-                content={"message": "Email Successfully confirmed"},
-                headers={"X-Success-Code": "2032"},
-            )
-
-    async def verify_email_for_change_email(self):
-        @self.router.get("/email/change/verify/{token}")
-        async def verify_email_for_change_email(
-            token: str = Path(), db: AsyncSession = TransactionSessionDep
-        ):
-            """
-            ## Endpoint верификации нового email адреса.
-
-            ### Описание
-            - Ручной способ верификации нового email адреса по токену.
-            - Возвращает сообщение о статусе операции и меняет email при удаче.
-            - Endpoint доступен для всех.
-
-            ### Требования
-            - Этот эндпоинт требует передачи данных в строке запроса.
-            - Пользователь не должен быть авторизован.
-            """
-            verify_token = CheckTokenModel(token=token)
-            token_data = await db.execute(
-                select(ChangeEmailVerificationToken).where(
-                    ChangeEmailVerificationToken.token == verify_token.token
-                )
-            )
-            token_data = token_data.scalar_one_or_none()
-            if not token_data:
-                return TokenNotFoundException
-            if datetime.now(timezone.utc) > token_data.expires_at or token_data.ban:
-                return TokenExpiredException
-            email_schema = CheckEmailModel(email=token_data.email)
-            check_user = await UsersDAO.find_one_or_none(db=db, filters=email_schema)
-            if not check_user:
-                return UserNotFoundException
-            try:
-
-                token_data.ban = True
-
-                check_user.email = token_data.new_email
-                check_user.is_email_confirmed = True
-                await db.flush()
-            except SQLAlchemyError as e:
-                logger.error(f"Ошибка при обновлении email: {e}")
-                raise UpdateException
-            user = SUserInfoRole.model_validate(check_user)
-            answer = user.model_dump(exclude_none=True)
-            return JSONResponse(
-                status_code=200, content=answer, headers={"X-Success-Code": "2032"}
-            )
-
-    async def applying_new_password(self):
-        @self.router.post("/password/apply")
-        async def applying_new_password(
-            form_data: ResetPasswordSchema = Depends(ResetPasswordSchema.as_form),
-            db: AsyncSession = TransactionSessionDep,
-        ) -> JSONResponse:
-            """
-            ## Endpoint сброса пароля.
-
-            ### Описание
-            - Ручной способ сброса пароля. На него с фронта приходят данные для обновления пароля после перехода по ссылке, которую пользователе получил по email.
-            - Возвращает сообщение о статусе операции.
-            - Endpoint доступен для всех.
-
-            ### Требования
-            - Этот эндпоинт требует передачи данных в теле запроса в виде **form_data (application/x-www-form-urlecoded**).
-            - Пользователь не должен быть авторизован.
-            """
-
-            verify_token = CheckTokenModel(token=form_data.token)
-            token_data = await db.execute(
-                select(ResetPasswordToken).where(
-                    ResetPasswordToken.token == verify_token.token
-                )
-            )
-            token_data = token_data.scalar_one_or_none()
-            if not token_data:
-                return TokenNotFoundException
-            if datetime.now(timezone.utc) > token_data.expires_at or token_data.ban:
-                return TokenExpiredException
-            email_schema = CheckEmailModel(email=token_data.email)
-            check_user = await UsersDAO.find_one_or_none(db=db, filters=email_schema)
-            if not check_user:
-                return UserNotFoundException
-            check_user.password = form_data.password
-            await db.flush()
-            return JSONResponse(
-                status_code=200,
-                content={"message": "The password is successfully updated"},
-                headers={"X-Success-Code": "2033"},
-            )

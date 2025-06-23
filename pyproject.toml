@@ -69,6 +69,8 @@ dependencies = [
 Source = "https://github.com/OasisOfCleanCode/TrainerAPI"
 PrivacyPolicy = "https://raw.githubusercontent.com/OasisOfCleanCode/TrainerAPI/dev/templates/privacy_policy_oasis.html"
 
+
+
 [tool.setuptools]
 include-package-data = true
 
