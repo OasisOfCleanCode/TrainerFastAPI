@@ -1,19 +1,26 @@
 FROM python:3.12-slim
 
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONUNBUFFERED=1
+# Обновление системы и установка необходимых зависимостей
+RUN apt-get update && apt-get install -y \
+    curl \
+    gcc \
+    libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
 
-RUN apt-get update && apt-get install -y curl gcc libpq-dev && \
-    curl -Ls https://astral.sh/uv/install.sh | sh && \
-    rm -rf /var/lib/apt/lists/*
+# Установка uv
+RUN curl -Ls https://astral.sh/uv/install.sh | sh && \
+    ln -s ~/.cargo/bin/uv /usr/local/bin/uv
 
 WORKDIR /app
 
+# Копируем только pyproject.toml и версию — быстрее layer caching
 COPY pyproject.toml version.txt ./
-COPY app/ ./app/
 
-RUN ~/.cargo/bin/uv pip install .  # или если нужно: `uv pip install -e .`
+# Установка зависимостей проекта
+RUN uv pip install .
 
+# Копируем остальной код
 COPY . .
 
+# Команда запуска (можно поменять под нужды проекта)
 CMD ["gunicorn", "run:app", "-c", "/app/gunicorn.conf.py"]
