@@ -22,5 +22,7 @@ RUN uv pip install .
 # Копируем остальной код
 COPY . .
 
+EXPOSE 8666
+
 # Команда запуска (можно поменять под нужды проекта)
 CMD ["gunicorn", "run:app", "-c", "/app/gunicorn.conf.py"]
