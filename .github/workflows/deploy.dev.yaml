@@ -149,15 +149,23 @@ jobs:
         with:
           python-version: '3.12'
 
-      # Установка зависимостей Python
-      - name: 📦 Установка зависимостей Python
-        if: ${{ github.event.inputs.deploy_type == 'application' || github.event.inputs.deploy_type == 'full' }}
+      - name: ♻️ Кэш uv и зависимости
+        id: cache-uv
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/bin
+            ~/.cache/uv
+          key: uv-cache-${{ runner.os }}-${{ hashFiles('pyproject.toml') }}-${{ hashFiles('version.txt') }}
+
+      - name: 📦 Установка зависимостей через uv
         run: |
-              python -m pip install --upgrade pip
-              pip install pip-tools
-              pip-compile --resolver=backtracking requirements.in
-              pip install -r requirements.txt
-          
+          if ! command -v uv &> /dev/null; then
+            curl -Ls https://astral.sh/uv/install.sh | sh
+            export PATH="$HOME/.cargo/bin:$PATH"
+          fi
+          export PATH="$HOME/.cargo/bin:$PATH"
+          uv pip install .
 
       - name: 📜 Генерация и извлечение CHANGELOG
         if: ${{ github.event.inputs.deploy_type == 'application' || github.event.inputs.deploy_type == 'full' }}
