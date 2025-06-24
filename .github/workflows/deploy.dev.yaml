@@ -308,7 +308,6 @@ jobs:
         run: |
           scp -i ~/.ssh/tfa_dev_key -P ${{ secrets.DEV_SERVER_PORT }} $COMPOSE_FILE ${{ secrets.DEV_SERVER_USER }}@${{ secrets.DEV_SERVER_IP }}:/tfa_projects/backend/tfa/compose.yaml
           scp -i ~/.ssh/tfa_dev_key -P ${{ secrets.DEV_SERVER_PORT }} Dockerfile ${{ secrets.DEV_SERVER_USER }}@${{ secrets.DEV_SERVER_IP }}:/tfa_projects/backend/tfa/Dockerfile
-          scp -i ~/.ssh/tfa_dev_key -P ${{ secrets.DEV_SERVER_PORT }} requirements.in ${{ secrets.DEV_SERVER_USER }}@${{ secrets.DEV_SERVER_IP }}:/tfa_projects/backend/tfa/requirements.in
       
 
       # Запуск развертывания приложения на сервере

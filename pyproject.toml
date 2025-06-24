@@ -1,3 +1,7 @@
+[build-system]
+requires = ["setuptools>=61", "setuptools_scm[toml]", "wheel"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "trainer-api"
 description = "Trainer API Application — part of the Oasis of Clean Code project"
