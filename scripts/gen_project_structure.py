@@ -2,7 +2,6 @@
 
 import os
 
-from app.core.config import BASE_PATH
 from app.utils.logger import logger
 
 
@@ -45,7 +44,7 @@ def generate_folder_structure(path, exclusions, output_file):
 
 
 if __name__ == "__main__":
-    base_path = BASE_PATH
+    base_path = Path(__file__).resolve().parent.parent
     exclusions = [
         ".venv",
         ".git",
